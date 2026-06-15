@@ -7,7 +7,7 @@ import sys
 
 INPUT_FILE = "finviz.csv"
 OUTPUT_FILE = "finviz_with_descriptions.csv"
-DELAY = 1.8
+DELAY = 1.6
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 }
@@ -20,28 +20,19 @@ def get_first_20_words(ticker: str) -> str:
             return f"HTTP_{resp.status_code}"
 
         soup = BeautifulSoup(resp.text, "lxml")
-        text = ""
 
-        # Try to find description
-        for td in soup.find_all("td", class_="snapshot-td2-cp"):
-            t = td.get_text(" ", strip=True)
-            if len(t) > 60:
-                text = t
-                break
-
-        if not text:
-            profile = soup.find("div", {"id": "quote-profile"})
-            if profile:
-                text = profile.get_text(" ", strip=True)
-
-        if text:
+        # === Correct selector based on your HTML ===
+        bio_div = soup.find("div", class_="quote_profile-bio")
+        
+        if bio_div:
+            text = bio_div.get_text(" ", strip=True)
             words = text.split()[:20]
             return " ".join(words) + "..."
         else:
             return "No description found"
 
     except Exception as e:
-        return f"Error: {str(e)[:60]}"
+        return f"Error: {str(e)[:70]}"
 
 # ====================== MAIN ======================
 print("=== Finviz Live Description Scraper ===\n")
@@ -52,7 +43,7 @@ if not os.path.exists(INPUT_FILE):
 
 df = pd.read_csv(INPUT_FILE, low_memory=False)
 
-# Filter out ETFs
+# Filter ETFs
 etf_mask = df["ETF Type"].notna() | (df.get("Asset Type", "") == "Exchange Traded Fund")
 stocks_df = df[~etf_mask].copy()
 
@@ -70,7 +61,7 @@ for idx, row in to_process.iterrows():
 
     snippet = get_first_20_words(ticker)
     
-    # === LIVE OUTPUT (this is what you will see in real time) ===
+    # Live output
     print(f"{ticker} | {snippet}", flush=True)
 
     stocks_df.at[idx, "Finviz_Description_Snippet"] = snippet
