@@ -16,15 +16,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install dependencies
-        run: pip install pandas requests beautifulsoup4 lxml tqdm
+        run: |
+          pip install pandas requests beautifulsoup4 lxml tqdm
 
       - name: Run enrichment script
         run: python scripts/enrich_finviz_descriptions.py
 
-      - name: Upload enriched CSV as artifact
+      - name: Upload enriched file as artifact
         uses: actions/upload-artifact@v4
         with:
           name: finviz-enriched
